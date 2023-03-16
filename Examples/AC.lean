@@ -104,8 +104,8 @@ theorem ac_implies_lem : ac → lem := by
   let TPΦ := {χ : T → Prop // Φ χ}
   -- (部分型(Subtype) {x : T // p x} は値 val : T と条件 property : p val の組 ⟨ val, property ⟩ からなる型)
   -- Φ, U, V の定義より Φ (U) と Φ (V) は明らかに成り立つ
-  have hU : Φ (U) := by left; rfl
-  have hV : Φ (V) := by right; rfl
+  have hU : Φ (U) := by simp
+  have hV : Φ (V) := by simp
   -- よって U, V を TPΦ の元にできる
   let U' : TPΦ := ⟨ U, hU ⟩
   let V' : TPΦ := ⟨ V, hV ⟩
