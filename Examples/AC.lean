@@ -1,5 +1,4 @@
 import Mathlib.Tactic.Choose
-import Mathlib.Tactic.LibrarySearch
 
 /-
   大雑把に言えば，選択公理とは仮定
@@ -190,7 +189,7 @@ theorem ac_implies_lem : ac → lem := by
 /-
   Classical.choice は現れていないが，2つの公理が必要になっていることがわかる
   この2つの公理は以下の要請で，ロジックの観点では重要な代物だが，通常の数学をやる上ではそれほど気にしなくていいと思われる
-  
+
   - propext ... 同値な2つの命題は「等しい」: (a ↔ b) → a = b
   - Quot.sound ... 商型(Quotient type)の要素の等しさを定める: r a b → Quot.mk r a = Quot.mk r b
 -/
