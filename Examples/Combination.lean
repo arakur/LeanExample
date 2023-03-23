@@ -7,6 +7,7 @@ import Mathlib.Algebra.BigOperators.Basic
 import Mathlib.Algebra.BigOperators.Ring
 import Std.Util.ExtendedBinder
 import Mathlib.Tactic.Ring
+import Mathlib.Tactic.Zify
 
 -- 二項係数 C n k を定義する
 @[simp]
@@ -103,7 +104,7 @@ lemma c_rev (n : ℕ) (k : ℤ) : C' n k = C' n (n - k) := by
     -- 計算
     calc
         C' (n' + 1) k
-      = C' n' (k - 1) + C' n' k               := rfl
+      = C' n' (k - 1) + C' n' k              := rfl
     _ = C' n' (n' - (k - 1)) + C' n' (n' - k) := by rw [ih (k-1), ih k]
                                               -- 帰納法の仮定より
     _ = C' n' ((n' + 1) - k) + C' n' (((n' + 1) - k) - 1)
@@ -154,7 +155,7 @@ theorem c_n_prec_eq_n (n : ℕ) : C' n (n - 1) = n := by
   
     (a + b)^n = ∑ k ≤ n, C' n k * a^k * b^(n - k)
 
-  が任意の可換環 R において成り立つことを示す．
+  が任意の可換半環 R において成り立つことを示す．
 -/
 
 open BigOperators
@@ -165,15 +166,15 @@ open Std.ExtendedBinder
 -- が定義されている．
 -- ここでは新たに ∑ k ≤ n, f k という記法を定義しておく．
 
-syntax (name := bigsumle) "∑ " ident " ≤ " term "," term:67 : term
+syntax (name := bigsumle) "∑ " ident " ≤ " term "," term:70 : term
 macro_rules (kind := bigsumle)
   | `(∑ $x:ident ≤ $s, $r) => `(Finset.sum (.range ($s + 1)) (fun $x ↦ $r))
 
 #eval let n := 5; ∑ x ≤ n, C' n x -- 32
 
 -- 二項定理
-theorem binomial_thm {R} [CommRing R] (a b : R) (n : ℕ)
-  : (a + b)^n = ∑ k  ≤ n, C' n k * a^k * b^(n - k)
+theorem binomial_thm {R} [CommSemiring R] (a b : R) (n : ℕ)
+  : (a + b)^n = ∑ k ≤ n, C' n k * a^k * b^(n - k)
   := by
   -- n に関する帰納法で示す
   induction n
@@ -239,7 +240,7 @@ theorem binomial_thm {R} [CommRing R] (a b : R) (n : ℕ)
                 calc
                     n' + 1 - (1 + k)
                   = n' + 1 - (k + 1) := by simp [add_comm]
-                _ = n' - k           := by rw [Nat.succ_sub_succ_eq_sub]
+                _ = n' - k          := by rw [Nat.succ_sub_succ_eq_sub]
         -- 一つ目の和の先頭に 0 と等しい項を追加して一つの和にまとめる
     _ = ( ∑ k ≤ 0,
             C' n' (k - 1) * a^k * b^((n' + 1) - k)
@@ -263,24 +264,41 @@ theorem binomial_thm {R} [CommRing R] (a b : R) (n : ℕ)
                   := by congr 2; simp [Nat.add_comm]
             rw [this]
         -- 二つ目の和の末尾に 0 と等しい項を追加して一つの和にまとめる
-    _ = ( ∑ k  ≤ n' + 1, C' n' (k - 1) * a^k * b^((n' + 1) - k) )
-        + ( ∑ k  ≤ n', C' n' k * a^k * b^((n' + 1) - k)
+    _ = ( ∑ k ≤ n' + 1, C' n' (k - 1) * a^k * b^((n' + 1) - k) )
+        + ( ∑ k ≤ n', C' n' k * a^k * b^((n' + 1) - k)
           + C' n' (n' + 1) * a^(n' + 1) * b ^((n' + 1) - (n' + 1)) )
           := by simp [c_n_k_eq_zero_of_k_gt_n n' (n' + 1) (by simp)]
-    _ = ( ∑ k  ≤ n' + 1, C' n' (k - 1) * a^k * b^((n' + 1) - k) )
-        + ∑ k  ≤ n' + 1, C' n' k * a^k * b^((n' + 1) - k)
+    _ = ( ∑ k ≤ n' + 1, C' n' (k - 1) * a^k * b^((n' + 1) - k) )
+        + ∑ k ≤ n' + 1, C' n' k * a^k * b^((n' + 1) - k)
           := by simp [Finset.sum_range_succ]
         -- (∑ f) + (∑ g) = ∑ (f + g)
-    _ = ∑ k  ≤ n' + 1,
+    _ = ∑ k ≤ n' + 1,
           ( C' n' (k - 1) * a^k * b^((n' + 1) - k)
           + C' n' k * a^k * b^((n' + 1) - k) )
           := by simp [Finset.sum_add_distrib]
         -- 分配法則
-    _ = ∑ k  ≤ n' + 1,
+    _ = ∑ k ≤ n' + 1,
           (C' n' (k - 1) + C' n' k) * a^k * b^((n' + 1) - k)
           := by simp [add_mul]
         -- C' n' (k - 1) + C' n' k = C' (n' + 1) k
-    _ = ∑ k  ≤ n' + 1,
+    _ = ∑ k ≤ n' + 1,
           C' (n' + 1) k * a^k * b^((n' + 1) - k)
           := by simp
 -- QED
+
+-- 二項定理から次の公式が導出できる
+
+example (n : ℕ) : ∑ k ≤ n, C' n k = 2^n := by
+  calc
+      ∑ k ≤ n, C' n k
+    = ∑ k ≤ n, C' n k * 1^k * 1^(n-k) := by simp
+  _ = (1 + 1)^n := by simp [binomial_thm 1 1 n]
+  _ = 2^n := by congr
+
+example (n : ℕ) : n > 0 → ∑ k ≤ n, (-1 : ℤ)^k * C' n k = 0 := by
+  intro (h : 0 < n)
+  calc
+      ∑ k ≤ n, (-1 : ℤ)^k * C' n k
+    = ∑ k ≤ n, C' n k * (-1 : ℤ)^k * 1^(n-k)  := by simp [mul_comm]
+  _ = ((-1 : ℤ) + 1)^n                        := by rw [← binomial_thm (-1) 1 n]
+  _ = 0                                       := by simp [zero_pow h]
